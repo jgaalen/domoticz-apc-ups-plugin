@@ -35,11 +35,18 @@ def onStart():
 def onHeartbeat():
     try:
         res = str(subprocess.check_output([Parameters["Mode2"], '-u', '-h', Parameters["Address"] + ':' + Parameters["Port"]]))
+        batterylevel = -1
         for line in res.split('\\n'):
             (key,spl,val) = line.partition(': ')
             key = key.rstrip()			#Strip spaces right of text
             val = val.strip()			#Remove outside spaces
+            if key == 'BCHARGE':
+                batterylevel=int(str(val).split('.')[0])
             if key in values:
-                Devices[values[key]['dunit']].Update(0, str(val))
+                #Domoticz.Log("{} {}".format(key,val))
+                if batterylevel >= 0:
+                    Devices[values[key]['dunit']].Update(nValue=0, sValue=str(val), BatteryLevel=batterylevel)
+                else:
+                    Devices[values[key]['dunit']].Update(0, str(val))
     except Exception as err:
         Domoticz.Error("APC UPS Error: " + str(err))
