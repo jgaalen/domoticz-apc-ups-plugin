@@ -21,6 +21,13 @@ values = {
     'LINEV': {'dname': 'Line voltage', 'dunit': 2, 'dtype':243, 'dsubtype':8},
     'LOADPCT': {'dname': 'Load percentage', 'dunit': 3, 'dtype':243, 'dsubtype':6},
     'BCHARGE': {'dname': 'Battery charge level', 'dunit': 4, 'dtype':243, 'dsubtype':6},
+    'MODEL': {'dname': 'Model', 'dunit': 5, 'dtype':243, 'dsubtype':19},
+    'SERIALNO': {'dname': 'Serial Number', 'dunit': 6, 'dtype':243, 'dsubtype':19},
+    'BATTV': {'dname': 'Battery voltage', 'dunit': 7, 'dtype':243, 'dsubtype':8},
+    'NOMBATTV': {'dname': 'Nominal battery voltage', 'dunit': 8, 'dtype':243, 'dsubtype':8},
+    'BATTDATE': {'dname': 'Battery date', 'dunit': 9, 'dtype':243, 'dsubtype':19},
+    'SELFTEST': {'dname': 'Date of last self test', 'dunit': 10, 'dtype':243, 'dsubtype':19},
+    'LASTXFER': {'dname': 'Reason for last transfer to battery', 'dunit': 11, 'dtype':243, 'dsubtype':19},
 }
 
 def onStart():
