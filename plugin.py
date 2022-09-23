@@ -28,6 +28,11 @@ values = {
     'BATTDATE': {'dname': 'Battery date', 'dunit': 9, 'dtype':243, 'dsubtype':19},
     'SELFTEST': {'dname': 'Date of last self test', 'dunit': 10, 'dtype':243, 'dsubtype':19},
     'LASTXFER': {'dname': 'Reason for last transfer to battery', 'dunit': 11, 'dtype':243, 'dsubtype':19},
+    'NOMPOWER': {'dname': 'Nominal UPS power output', 'dunit': 12, 'dtype':243, 'dsubtype':31, 'options':'1;Watt'},
+    'TIMELEFT': {'dname': 'Time left on battery', 'dunit': 13, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
+    'NUMXFERS': {'dname': 'Number of transfers to battery', 'dunit': 14, 'dtype':243, 'dsubtype':31, 'options':'1;times'},
+    'TONBATT': {'dname': 'Time on battery', 'dunit': 15, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
+    'CUMONBATT': {'dname': 'Cumulative time on battery', 'dunit': 16, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
 }
 
 def onStart():
@@ -35,7 +40,10 @@ def onStart():
 
     if len(Devices) == 0:
         for key in values:
-            Domoticz.Device(Name=values[key]['dname'], Unit=values[key]['dunit'], Type=values[key]['dtype'], Subtype=values[key]['dsubtype'], Used=1).Create()
+            try:
+                Domoticz.Device(Name=values[key]['dname'], Unit=values[key]['dunit'], Type=values[key]['dtype'], Subtype=values[key]['dsubtype'], Used=1, Options=values[key]['options']).Create()
+            except:
+                Domoticz.Device(Name=values[key]['dname'], Unit=values[key]['dunit'], Type=values[key]['dtype'], Subtype=values[key]['dsubtype'], Used=1).Create()
 
     Domoticz.Heartbeat(int(Parameters["Mode1"]))
 
