@@ -21,6 +21,18 @@ values = {
     'LINEV': {'dname': 'Line voltage', 'dunit': 2, 'dtype':243, 'dsubtype':8},
     'LOADPCT': {'dname': 'Load percentage', 'dunit': 3, 'dtype':243, 'dsubtype':6},
     'BCHARGE': {'dname': 'Battery charge level', 'dunit': 4, 'dtype':243, 'dsubtype':6},
+    'MODEL': {'dname': 'Model', 'dunit': 5, 'dtype':243, 'dsubtype':19},
+    'SERIALNO': {'dname': 'Serial Number', 'dunit': 6, 'dtype':243, 'dsubtype':19},
+    'BATTV': {'dname': 'Battery voltage', 'dunit': 7, 'dtype':243, 'dsubtype':8},
+    'NOMBATTV': {'dname': 'Nominal battery voltage', 'dunit': 8, 'dtype':243, 'dsubtype':8},
+    'BATTDATE': {'dname': 'Battery date', 'dunit': 9, 'dtype':243, 'dsubtype':19},
+    'SELFTEST': {'dname': 'Date of last self test', 'dunit': 10, 'dtype':243, 'dsubtype':19},
+    'LASTXFER': {'dname': 'Reason for last transfer to battery', 'dunit': 11, 'dtype':243, 'dsubtype':19},
+    'NOMPOWER': {'dname': 'Nominal UPS power output', 'dunit': 12, 'dtype':243, 'dsubtype':31, 'options':'1;Watt'},
+    'TIMELEFT': {'dname': 'Time left on battery', 'dunit': 13, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
+    'NUMXFERS': {'dname': 'Number of transfers to battery', 'dunit': 14, 'dtype':243, 'dsubtype':31, 'options':'1;times'},
+    'TONBATT': {'dname': 'Time on battery', 'dunit': 15, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
+    'CUMONBATT': {'dname': 'Cumulative time on battery', 'dunit': 16, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
 }
 
 def onStart():
@@ -28,18 +40,28 @@ def onStart():
 
     if len(Devices) == 0:
         for key in values:
-            Domoticz.Device(Name=values[key]['dname'], Unit=values[key]['dunit'], Type=values[key]['dtype'], Subtype=values[key]['dsubtype'], Used=1).Create()
+            try:
+                Domoticz.Device(Name=values[key]['dname'], Unit=values[key]['dunit'], Type=values[key]['dtype'], Subtype=values[key]['dsubtype'], Used=1, Options=values[key]['options']).Create()
+            except:
+                Domoticz.Device(Name=values[key]['dname'], Unit=values[key]['dunit'], Type=values[key]['dtype'], Subtype=values[key]['dsubtype'], Used=1).Create()
 
     Domoticz.Heartbeat(int(Parameters["Mode1"]))
 
 def onHeartbeat():
     try:
         res = str(subprocess.check_output([Parameters["Mode2"], '-u', '-h', Parameters["Address"] + ':' + Parameters["Port"]]))
+        batterylevel = -1
         for line in res.split('\\n'):
             (key,spl,val) = line.partition(': ')
             key = key.rstrip()			#Strip spaces right of text
             val = val.strip()			#Remove outside spaces
+            if key == 'BCHARGE':
+                batterylevel=int(str(val).split('.')[0])
             if key in values:
-                Devices[values[key]['dunit']].Update(0, str(val))
+                #Domoticz.Log("{} {}".format(key,val))
+                if batterylevel >= 0:
+                    Devices[values[key]['dunit']].Update(nValue=0, sValue=str(val), BatteryLevel=batterylevel)
+                else:
+                    Devices[values[key]['dunit']].Update(0, str(val))
     except Exception as err:
         Domoticz.Error("APC UPS Error: " + str(err))
