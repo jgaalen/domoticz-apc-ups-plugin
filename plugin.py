@@ -35,10 +35,15 @@ values = {
     'CUMONBATT': {'dname': 'Cumulative time on battery', 'dunit': 16, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
 }
 
+try:
+    import time
+except Exception as e:
+    Domoticz.Error("Can't import time: "+str(e))
+
 def onStart():
     Domoticz.Log("Domoticz APC UPS plugin start")
 
-    if len(Devices) == 0:
+    if len(Devices) != len(values):
         for key in values:
             try:
                 Domoticz.Device(Name=values[key]['dname'], Unit=values[key]['dunit'], Type=values[key]['dtype'], Subtype=values[key]['dsubtype'], Used=1, Options=values[key]['options']).Create()
@@ -50,18 +55,31 @@ def onStart():
 def onHeartbeat():
     try:
         res = str(subprocess.check_output([Parameters["Mode2"], '-u', '-h', Parameters["Address"] + ':' + Parameters["Port"]]))
-        batterylevel = -1
-        for line in res.split('\\n'):
+
+        battery_values = {}
+        current = time.time()
+
+        for line in res.strip().split('\\n'):
             (key,spl,val) = line.partition(': ')
             key = key.rstrip()			#Strip spaces right of text
             val = val.strip()			#Remove outside spaces
-            if key == 'BCHARGE':
-                batterylevel=int(str(val).split('.')[0])
+            battery_values[key] = float(val) if val.replace('.', '', 1).isdigit() else val
+
+        batterylevel = int(str(battery_values.get('BCHARGE', -1)).split('.')[0])
+
+        for key, val in battery_values.items():
             if key in values:
                 #Domoticz.Log("{} {}".format(key,val))
-                if batterylevel >= 0:
-                    Devices[values[key]['dunit']].Update(nValue=0, sValue=str(val), BatteryLevel=batterylevel)
-                else:
-                    Devices[values[key]['dunit']].Update(0, str(val))
+                iUnit = values[key]['dunit']
+                curval = Devices[iUnit].sValue
+                LUpdate = Devices[iUnit].LastUpdate
+                LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+
+                if ( str(val) != curval or (current-LUpdate) > 86400 ):
+                    if batterylevel >= 0:
+                        Devices[iUnit].Update(nValue=0, sValue=str(val), BatteryLevel=batterylevel)
+                    else:
+                        Devices[iUnit].Update(0, str(val))
+
     except Exception as err:
         Domoticz.Error("APC UPS Error: " + str(err))
