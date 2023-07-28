@@ -35,11 +35,6 @@ values = {
     'CUMONBATT': {'dname': 'Cumulative time on battery', 'dunit': 16, 'dtype':243, 'dsubtype':31, 'options':'1;minutes'},
 }
 
-try:
-    import time
-except Exception as e:
-    Domoticz.Error("Can't import time: "+str(e))
-
 def onStart():
     Domoticz.Log("Domoticz APC UPS plugin start")
 
@@ -57,7 +52,6 @@ def onHeartbeat():
         res = str(subprocess.check_output([Parameters["Mode2"], '-u', '-h', Parameters["Address"] + ':' + Parameters["Port"]]))
 
         battery_values = {}
-        current = time.time()
 
         for line in res.strip().split('\\n'):
             (key,spl,val) = line.partition(': ')
@@ -72,10 +66,8 @@ def onHeartbeat():
                 #Domoticz.Log("{} {}".format(key,val))
                 iUnit = values[key]['dunit']
                 curval = Devices[iUnit].sValue
-                LUpdate = Devices[iUnit].LastUpdate
-                LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
 
-                if ( str(val) != curval or (current-LUpdate) > 86400 ):
+                if ( str(val) != curval ):
                     if batterylevel >= 0:
                         Devices[iUnit].Update(nValue=0, sValue=str(val), BatteryLevel=batterylevel)
                     else:
